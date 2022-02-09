@@ -2,6 +2,7 @@ package simpledb.plan;
 
 import java.util.*;
 import simpledb.tx.Transaction;
+import simpledb.materialize.SortPlan;
 import simpledb.metadata.*;
 import simpledb.parse.*;
 
@@ -45,6 +46,10 @@ public class BasicQueryPlanner implements QueryPlanner {
       
       //Step 4: Project on the field names
       p = new ProjectPlan(p, data.fields());
+      
+      // Step 5: Sort field names in ascending order
+      p = new SortPlan(tx, p, data.getOd());
+      
       return p;
    }
 }

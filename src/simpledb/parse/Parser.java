@@ -64,7 +64,17 @@ public class Parser {
          lex.eatKeyword("where");
          pred = predicate();
       }
-      return new QueryData(fields, tables, pred);
+      OrderData od;
+      if (lex.matchKeyword("order")) {
+    	  od = order();
+      } else {
+    	  List<Pair> L = new ArrayList<>();
+    	  for (String s : fields) {
+    		  L.add(new Pair(s, true));
+    	  }
+    	  od = new OrderData(L);
+      }
+      return new QueryData(fields, tables, pred, od);    	  
    }
    
    private List<String> selectList() {
@@ -76,6 +86,32 @@ public class Parser {
       }
       return L;
    }
+   
+   private List<Pair> orderList() {
+	      List<Pair> L = new ArrayList<>();
+	      String f = field();
+	      String k = "";
+	      if (lex.matchKeyword("asc")) {
+	    	  lex.eatKeyword("asc");
+	    	  k = "asc";
+	    	  L.add(new Pair(f, true));
+	      } else if (lex.matchKeyword("desc")) {
+	    	  lex.eatKeyword("desc");
+	    	  k = "desc";
+	    	  L.add(new Pair(f, false));
+	      } 
+	      
+	      if (lex.matchDelim(',')) {
+	    	  L.add(new Pair(f, true));
+	    	  lex.eatDelim(',');
+	    	  L.addAll(orderList());
+	      }
+	      
+	      if (!k.equals("asc") || !k.equals("desc")) {
+	    	  L.add(new Pair(f, true));
+	      }
+	      return L;
+	   }
    
    private Collection<String> tableList() {
       Collection<String> L = new ArrayList<String>();
@@ -138,6 +174,15 @@ public class Parser {
       List<Constant> vals = constList();
       lex.eatDelim(')');
       return new InsertData(tblname, flds, vals);
+   }
+   
+// Methods for parsing queries
+   
+   public OrderData order() {
+      lex.eatKeyword("order");
+      lex.eatKeyword("by");
+      List<Pair> fields = orderList();
+      return new OrderData(fields);
    }
    
    private List<String> fieldList() {

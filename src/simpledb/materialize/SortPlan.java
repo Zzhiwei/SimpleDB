@@ -3,6 +3,7 @@ package simpledb.materialize;
 import java.util.*;
 import simpledb.tx.Transaction;
 import simpledb.record.*;
+import simpledb.parse.OrderData;
 import simpledb.plan.Plan;
 import simpledb.query.*;
 
@@ -22,7 +23,7 @@ public class SortPlan implements Plan {
     * @param sortfields the fields to sort by
     * @param tx the calling transaction
     */
-   public SortPlan(Transaction tx, Plan p, List<String> sortfields) {
+   public SortPlan(Transaction tx, Plan p, OrderData sortfields) {
       this.tx = tx;
       this.p = p;
       sch = p.schema();
