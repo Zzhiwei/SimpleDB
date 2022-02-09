@@ -38,9 +38,9 @@ public class Parser {
    
    public Term term() {
       Expression lhs = expression();
-      String op = lex.eatOperator();
+      Operator operator = lex.eatOperator();
       Expression rhs = expression();
-      return new Term(lhs, rhs, op);
+      return new Term(lhs, rhs, operator);
    }
    
    public Predicate predicate() {

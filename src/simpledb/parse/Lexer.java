@@ -1,6 +1,11 @@
 package simpledb.parse;
 
+import static simpledb.query.Operator.operators;
+
 import java.util.*;
+
+import simpledb.query.Operator;
+
 import java.io.*;
 
 /**
@@ -8,8 +13,7 @@ import java.io.*;
  * @author Edward Sciore
  */
 public class Lexer {
-   private Collection<String> keywords;
-   private Collection<String> operators;
+   private Collection<String> keywords;   
    private Collection<String> indexKeywords;
    private StreamTokenizer tok;
    
@@ -19,7 +23,6 @@ public class Lexer {
     */
    public Lexer(String s) {
       initKeywords();
-      initOperators();
       initIndexKeywords();
       tok = new StreamTokenizer(new StringReader(s));
       tok.ordinaryChar('.');   //disallow "." in identifiers
@@ -172,12 +175,12 @@ public class Lexer {
     * Otherwise, moves to the next token.
     * @return the string value of the current token
     */
-   public String eatOperator() {
+   public Operator eatOperator() {
 	   if (!matchOperator())
 		   throw new BadSyntaxException();
 	   String s = tok.sval;
 	   nextToken();
-	   return s;
+	   return new Operator(s);
    }
    
    private void nextToken() {
@@ -193,10 +196,6 @@ public class Lexer {
       keywords = Arrays.asList("select", "from", "where", "and",
                                "insert", "into", "values", "delete", "update", "set", 
                                "create", "table", "int", "varchar", "view", "as", "index", "on");
-   }
-   
-   private void initOperators() {
-	   operators = Arrays.asList("<", "<=", ">", ">=", "!=", "<>");
    }
    
    private void initIndexKeywords() {
