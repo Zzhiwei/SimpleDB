@@ -57,26 +57,12 @@ public class IndexInfo {
     * Open the index described by this object.
     * @return the Index object associated with this information
     */
-   public Index open() {
-	   SimpleDB db = new SimpleDB("studentdb");
-	   Transaction tx = db.newTx();
-	   MetadataMgr mdm = db.mdMgr();
-	   Plan plan = new TablePlan(tx, "student", mdm);
-	   UpdateScan scan = (UpdateScan) plan.open();
-	   Map<String,IndexInfo> idxinfo = mdm.getIndexInfo("student", tx);
-	   
-	   
+   public Index open() {	   	  	  
 	  if (indexKeyword.equals("hash")) {
-		  Index hash = new HashIndex(tx, idxname, idxLayout);
-		  for (String fldname : idxinfo.keySet()) {
-			  hash.insert(scan.getVal(fldname), scan.getRid());
-	      }
+		  Index hash = new HashIndex(tx, idxname, idxLayout);		  
 		  return hash;
 	  } else if (indexKeyword.equals("btree")) {
-		  Index btree = new BTreeIndex(tx, idxname, idxLayout);
-		  for (String fldname : idxinfo.keySet()) {
-			  btree.insert(scan.getVal(fldname), scan.getRid());
-	      }
+		  Index btree = new BTreeIndex(tx, idxname, idxLayout);		  
 		  return btree;
 	  } else {
 		  throw new BadSyntaxException();
