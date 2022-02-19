@@ -286,28 +286,28 @@ public class Parser {
    
    public CreateIndexData createIndex() {
       lex.eatKeyword("index");
-      System.out.println("Ate index");
+      
       
       String indexKeyword = lex.eatIndexKeyword();
-      System.out.println("Ate index keyword " + indexKeyword);
+      
       
       String idxname = lex.eatId();
-      System.out.println("Ate index name " + idxname);
+      
       
       lex.eatKeyword("on");
-      System.out.println("Ate on");
+      
       
       String tblname = lex.eatId();
-      System.out.println("Ate table name " + tblname);
+      
       
       lex.eatDelim('(');
-      System.out.println("Ate (");
+      
       
       String fldname = field();
-      System.out.println("Ate field name " + fldname);
+      
       
       lex.eatDelim(')');
-      System.out.println("Ate )");
+      
       
       return new CreateIndexData(idxname, tblname, fldname, indexKeyword);
    }

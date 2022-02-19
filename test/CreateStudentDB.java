@@ -74,12 +74,15 @@ public class CreateStudentDB {
          System.out.println("Table ENROLL created.");
 
          s = "insert into ENROLL(EId, StudentId, SectionId, Grade) values ";
-         String[] enrollvals = {"(14, 1, 13, 'A')",
-                                "(24, 1, 43, 'C' )",
-                                "(34, 2, 43, 'B+')",
-                                "(44, 4, 33, 'B' )",
-                                "(54, 4, 53, 'A' )",
-                                "(64, 6, 53, 'A' )"};
+         String[] studvals = {"(1, 'joe', 10, 2021)",
+                 "(2, 'amy', 20, 2020)",
+                 "(3, 'max', 10, 2022)",
+                 "(4, 'sue', 20, 2022)",
+                 "(5, 'bob', 30, 2020)",
+                 "(6, 'kim', 20, 2020)",
+                 "(7, 'art', 30, 2021)",
+                 "(8, 'pat', 20, 2019)",
+           "(9, 'lee', 10, 2021)"};
          for (int i=0; i<enrollvals.length; i++)
             planner.executeUpdate(s + enrollvals[i], tx);
          System.out.println("ENROLL records inserted.");
