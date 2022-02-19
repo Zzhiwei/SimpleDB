@@ -56,8 +56,12 @@ public class Parser {
    
    public QueryData query() {
       lex.eatKeyword("select");
+      // System.out.println("Ate select");
+      
       List<String> fields = selectList();
       lex.eatKeyword("from");
+      // System.out.println("Ate from");
+      
       Collection<String> tables = tableList();
       Predicate pred = new Predicate();
       if (lex.matchKeyword("where")) {
@@ -138,11 +142,14 @@ public class Parser {
    
    private Object create() {
       lex.eatKeyword("create");
+      System.out.println("Ate create");
+      
       if (lex.matchKeyword("table"))
          return createTable();
       else if (lex.matchKeyword("view"))
          return createView();
       else
+    	  System.out.println("Creating index");
          return createIndex();
    }
    
@@ -279,13 +286,29 @@ public class Parser {
    
    public CreateIndexData createIndex() {
       lex.eatKeyword("index");
+      System.out.println("Ate index");
+      
       String indexKeyword = lex.eatIndexKeyword();
+      System.out.println("Ate index keyword " + indexKeyword);
+      
       String idxname = lex.eatId();
+      System.out.println("Ate index name " + idxname);
+      
       lex.eatKeyword("on");
+      System.out.println("Ate on");
+      
       String tblname = lex.eatId();
+      System.out.println("Ate table name " + tblname);
+      
       lex.eatDelim('(');
+      System.out.println("Ate (");
+      
       String fldname = field();
+      System.out.println("Ate field name " + fldname);
+      
       lex.eatDelim(')');
+      System.out.println("Ate )");
+      
       return new CreateIndexData(idxname, tblname, fldname, indexKeyword);
    }
 }

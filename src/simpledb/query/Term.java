@@ -1,6 +1,5 @@
 package simpledb.query;
 
-import simpledb.parse.BadSyntaxException;
 import simpledb.plan.Plan;
 import simpledb.record.*;
 

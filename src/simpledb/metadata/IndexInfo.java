@@ -1,11 +1,20 @@
 package simpledb.metadata;
 
 import static java.sql.Types.INTEGER;
+
+import java.util.Map;
+
 import simpledb.tx.Transaction;
 import simpledb.record.*;
+import simpledb.server.SimpleDB;
 import simpledb.index.Index;
 import simpledb.index.hash.HashIndex;
 import simpledb.parse.BadSyntaxException;
+import simpledb.plan.Plan;
+import simpledb.plan.TablePlan;
+import simpledb.query.Scan;
+import simpledb.query.SelectScan;
+import simpledb.query.UpdateScan;
 import simpledb.index.btree.BTreeIndex; //in case we change to btree indexing
 
 
@@ -49,10 +58,26 @@ public class IndexInfo {
     * @return the Index object associated with this information
     */
    public Index open() {
+	   SimpleDB db = new SimpleDB("studentdb");
+	   Transaction tx = db.newTx();
+	   MetadataMgr mdm = db.mdMgr();
+	   Plan plan = new TablePlan(tx, "student", mdm);
+	   UpdateScan scan = (UpdateScan) plan.open();
+	   Map<String,IndexInfo> idxinfo = mdm.getIndexInfo("student", tx);
+	   
+	   
 	  if (indexKeyword.equals("hash")) {
-		  return new HashIndex(tx, idxname, idxLayout);		  
+		  Index hash = new HashIndex(tx, idxname, idxLayout);
+		  for (String fldname : idxinfo.keySet()) {
+			  hash.insert(scan.getVal(fldname), scan.getRid());
+	      }
+		  return hash;
 	  } else if (indexKeyword.equals("btree")) {
-		  return new BTreeIndex(tx, idxname, idxLayout);		  
+		  Index btree = new BTreeIndex(tx, idxname, idxLayout);
+		  for (String fldname : idxinfo.keySet()) {
+			  btree.insert(scan.getVal(fldname), scan.getRid());
+	      }
+		  return btree;
 	  } else {
 		  throw new BadSyntaxException();
 	  }
@@ -76,8 +101,11 @@ public class IndexInfo {
    public int blocksAccessed() {
       int rpb = tx.blockSize() / idxLayout.slotSize();
       int numblocks = si.recordsOutput() / rpb;
-      return HashIndex.searchCost(numblocks, rpb);
-//    return BTreeIndex.searchCost(numblocks, rpb);
+      if (indexKeyword.equals("hash")) {
+    	  return HashIndex.searchCost(numblocks, rpb);    	  
+      } else {
+    	  return BTreeIndex.searchCost(numblocks, rpb);
+      }
    }
    
    /**

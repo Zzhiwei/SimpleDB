@@ -83,8 +83,10 @@ public class CreateStudentDB {
          for (int i=0; i<enrollvals.length; i++)
             planner.executeUpdate(s + enrollvals[i], tx);
          System.out.println("ENROLL records inserted.");
-         s = "create index hash testIndex on student (majorid)";
+         s = "create index btree testIndex1 on student (majorid)";
          planner.executeUpdate(s, tx);
+//         s = "create index btree testIndex2 on enroll (studentid)";
+//         planner.executeUpdate(s, tx);
          tx.commit();
       
    }
