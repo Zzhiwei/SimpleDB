@@ -21,7 +21,7 @@ public class MergeJoinTest {
 		Scan s = mergeJoinPlan.open();
 		
 		while (s.next()) {
-			System.out.println(s.getString("sid"));
+			System.out.println(s.getVal("sname"));
 		}
 		s.close();
 		
