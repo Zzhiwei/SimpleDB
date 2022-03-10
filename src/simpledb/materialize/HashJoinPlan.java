@@ -1,15 +1,16 @@
-package simpledb.index.hash;
+package simpledb.materialize;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
-import simpledb.materialize.MergeJoinScan;
-import simpledb.materialize.SortPlan;
-import simpledb.materialize.SortScan;
 import simpledb.parse.OrderData;
 import simpledb.parse.Pair;
 import simpledb.plan.Plan;
+import simpledb.query.Constant;
 import simpledb.query.Scan;
+import simpledb.query.UpdateScan;
 import simpledb.record.Schema;
 import simpledb.tx.Transaction;
 
@@ -17,6 +18,7 @@ public class HashJoinPlan implements Plan {
 	   private Plan p1, p2;
 	   private String fldname1, fldname2;
 	   private Schema sch = new Schema();
+	   private Transaction tx;
 	   
 	   /**
 	    * Creates a mergejoin plan for the two specified queries.
@@ -35,6 +37,11 @@ public class HashJoinPlan implements Plan {
 		   this.p2 = p2;      
 		   sch.addAll(p1.schema());
 		   sch.addAll(p2.schema());
+		   this.tx = tx;
+		   
+		  
+		   
+		   					 
 	   }
 	   
 	   /** The method first sorts its two underlying scans
@@ -43,9 +50,59 @@ public class HashJoinPlan implements Plan {
 	     * @see simpledb.plan.Plan#open()
 	     */
 	   public Scan open() {
-	      Scan s1 = p1.open();
-	      Sca
-	      return new MergeJoinScan(s1, s2, fldname1, fldname2);
+		   //asuming 100 buffers for partitioning 		   
+		   List<UpdateScan> lhsBuckets = new ArrayList<>(100);
+		   List<UpdateScan> rhsBuckets = new ArrayList<>(100);
+		   Scan s1 = p1.open();
+		   Scan s2 = p2.open();
+		   
+		   while (s1.next()) {
+			   Schema p1Schema = p1.schema();
+			   Constant s1Val = s1.getVal(fldname1);
+			   int bucketIndex = s1Val.hashCode() % 100;
+			   UpdateScan sc = lhsBuckets.get(bucketIndex);
+			   if (sc == null) {
+				   TempTable temp = new TempTable(tx, p1Schema);	      
+				   sc = temp.open();
+				   sc.insert();
+				   for (String fldname : p1Schema.fields()) {
+					   sc.setVal(fldname, s1.getVal(fldname));
+				   }				   
+			   } else {
+				   sc = lhsBuckets.get(bucketIndex);
+				   sc.insert();
+				   for (String fldname : p1Schema.fields()) {
+					   sc.setVal(fldname, s1.getVal(fldname));
+				   }
+			   }
+		   		   
+		   }
+
+		   while (s2.next()) {
+			   Schema p2Schema = p2.schema();
+			   Constant s1Val = s1.getVal(fldname1);
+			   int bucketIndex = s1Val.hashCode() % 100;
+			   UpdateScan sc = lhsBuckets.get(bucketIndex);
+			   if (sc == null) {
+				   TempTable temp = new TempTable(tx, p1Schema);	      
+				   sc = temp.open();
+				   sc.insert();
+				   for (String fldname : p1Schema.fields()) {
+					   sc.setVal(fldname, s1.getVal(fldname));
+				   }				   
+			   } else {
+				   sc = lhsBuckets.get(bucketIndex);
+				   sc.insert();
+				   for (String fldname : p1Schema.fields()) {
+					   sc.setVal(fldname, s1.getVal(fldname));
+				   }
+			   }
+		   		   
+		   }
+		 
+		  	      
+		   
+	      return (Scan) new HashJoinScan(s1, s2, fldname1, fldname2, lhsHashtable, rhsHashtable);
 	   }
 	   
 	   /**
