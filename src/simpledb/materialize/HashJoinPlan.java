@@ -51,58 +51,89 @@ public class HashJoinPlan implements Plan {
 	     */
 	   public Scan open() {
 		   //asuming 100 buffers for partitioning 		   
-		   List<UpdateScan> lhsBuckets = new ArrayList<>(100);
-		   List<UpdateScan> rhsBuckets = new ArrayList<>(100);
+		   List<TempTable> lhsBuckets = new ArrayList<>(100);		   		   
+		   List<TempTable> rhsBuckets = new ArrayList<>(100);
+		   Schema p1Schema = p1.schema();
+		   Schema p2Schema = p2.schema();		   
 		   Scan s1 = p1.open();
 		   Scan s2 = p2.open();
+		   UpdateScan sc;
+		   for (int i = 0; i < 200; i++) {
+			   lhsBuckets.add(null);
+			   rhsBuckets.add(null);
+		   }
 		   
-		   while (s1.next()) {
-			   Schema p1Schema = p1.schema();
+		   while (s1.next()) {			   
 			   Constant s1Val = s1.getVal(fldname1);
 			   int bucketIndex = s1Val.hashCode() % 100;
-			   UpdateScan sc = lhsBuckets.get(bucketIndex);
-			   if (sc == null) {
-				   TempTable temp = new TempTable(tx, p1Schema);	      
-				   sc = temp.open();
+			   TempTable bucket = lhsBuckets.get(bucketIndex);	
+			   System.out.println("inserting record into bucket" + bucketIndex);
+			   if (bucket == null) {
+				   //create new bucket if no bucket yet
+				   bucket = new TempTable(tx, p1Schema);	     
+				   lhsBuckets.set(bucketIndex, bucket);
+				   sc = bucket.open();
 				   sc.insert();
 				   for (String fldname : p1Schema.fields()) {
+					   System.out.println("inserting " + s1.getVal(fldname) + " to " + fldname);
 					   sc.setVal(fldname, s1.getVal(fldname));
 				   }				   
 			   } else {
-				   sc = lhsBuckets.get(bucketIndex);
-				   sc.insert();
+				   // open bucket scan and insert values
+				   sc = bucket.open();
 				   for (String fldname : p1Schema.fields()) {
 					   sc.setVal(fldname, s1.getVal(fldname));
 				   }
 			   }
-		   		   
+			   sc.close();
+			   System.out.println();
+			      		   		   
 		   }
+		   
+		   for (TempTable bucket: lhsBuckets) {
+			   if (bucket == null) {
+				   continue;
+			   }
+			   System.out.println("trying to print out this bucket");
+			   
+			   sc = bucket.open();
+			   sc.beforeFirst();
+			   while (sc.next()) {				   
+				   for (String fldname : p1Schema.fields()) {
+					   System.out.print(sc.getVal(fldname));
+					   System.out.print(" | ");
+				   }
+				   System.out.println();
+			   }
+		   }
+		   
+		   return s2;
 
-		   while (s2.next()) {
-			   Schema p2Schema = p2.schema();
-			   Constant s1Val = s1.getVal(fldname1);
-			   int bucketIndex = s1Val.hashCode() % 100;
-			   UpdateScan sc = lhsBuckets.get(bucketIndex);
-			   if (sc == null) {
-				   TempTable temp = new TempTable(tx, p1Schema);	      
-				   sc = temp.open();
-				   sc.insert();
-				   for (String fldname : p1Schema.fields()) {
-					   sc.setVal(fldname, s1.getVal(fldname));
-				   }				   
-			   } else {
-				   sc = lhsBuckets.get(bucketIndex);
-				   sc.insert();
-				   for (String fldname : p1Schema.fields()) {
-					   sc.setVal(fldname, s1.getVal(fldname));
-				   }
-			   }
-		   		   
-		   }
-		 
-		  	      
+//		   while (s2.next()) {
+//			   Schema p2Schema = p2.schema();
+//			   Constant s1Val = s1.getVal(fldname1);
+//			   int bucketIndex = s1Val.hashCode() % 100;
+//			   UpdateScan sc = lhsBuckets.get(bucketIndex);
+//			   if (sc == null) {
+//				   TempTable temp = new TempTable(tx, p1Schema);	      
+//				   sc = temp.open();
+//				   sc.insert();
+//				   for (String fldname : p1Schema.fields()) {
+//					   sc.setVal(fldname, s1.getVal(fldname));
+//				   }				   
+//			   } else {
+//				   sc = lhsBuckets.get(bucketIndex);
+//				   sc.insert();
+//				   for (String fldname : p1Schema.fields()) {
+//					   sc.setVal(fldname, s1.getVal(fldname));
+//				   }
+//			   }
+//		   		   
+//		   }
+//		 
+//		  	      
 		   
-	      return (Scan) new HashJoinScan(s1, s2, fldname1, fldname2, lhsHashtable, rhsHashtable);
+//	      return (Scan) new HashJoinScan(s1, s2, fldname1, fldname2, lhsHashtable, rhsHashtable);
 	   }
 	   
 	   /**
