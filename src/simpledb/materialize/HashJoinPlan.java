@@ -105,6 +105,7 @@ public class HashJoinPlan implements Plan {
 				   }
 				   System.out.println();
 			   }
+			   sc.close();
 		   }
 		   
 		   return s2;
