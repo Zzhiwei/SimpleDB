@@ -17,11 +17,13 @@ public class ProjectPlan implements Plan {
     * having the specified subquery and field list.
     * @param p the subquery
     * @param fieldlist the list of fields
+ * @throws Exception 
     */
    public ProjectPlan(Plan p, List<String> fieldlist) {
       this.p = p;
-      for (String fldname : fieldlist)
-         schema.add(fldname, p.schema());
+      for (String fldname : fieldlist) {
+		 schema.add(fldname, p.schema());
+      }
    }
 
    /**

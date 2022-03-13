@@ -2,7 +2,13 @@ package simpledb.opt;
 
 import java.util.*;
 import simpledb.tx.Transaction;
+import simpledb.materialize.AggregationFn;
+import simpledb.materialize.SumFn;
+import simpledb.materialize.CountFn;
+import simpledb.materialize.GroupByPlan;
+import simpledb.materialize.MinFn;
 import simpledb.materialize.SortPlan;
+import simpledb.materialize.AvgFn;
 import simpledb.metadata.MetadataMgr;
 import simpledb.parse.QueryData;
 import simpledb.plan.*;
@@ -47,8 +53,15 @@ public class HeuristicQueryPlanner implements QueryPlanner {
             currentplan = getLowestProductPlan(currentplan);
       }
       
-      // Step 4.  Project on the field names and return
-      Plan p = new ProjectPlan(currentplan, data.fields());
+      // Step 4.Group by need to do aggfns
+      List<AggregationFn> aggLst = data.getAggs();
+      
+      Plan p;
+      p = new GroupByPlan(tx, currentplan, data.getGroupList(), aggLst);
+      
+      // Step 5.  Project on the field names and return
+      p = new ProjectPlan(p, data.fields());
+      
       return new SortPlan(tx, p, data.getOd());
    }
    

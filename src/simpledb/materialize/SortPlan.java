@@ -4,6 +4,7 @@ import java.util.*;
 import simpledb.tx.Transaction;
 import simpledb.record.*;
 import simpledb.parse.OrderData;
+import simpledb.parse.Pair;
 import simpledb.plan.Plan;
 import simpledb.query.*;
 
@@ -28,6 +29,17 @@ public class SortPlan implements Plan {
       this.p = p;
       sch = p.schema();
       comp = new RecordComparator(sortfields);
+   }
+   
+   public SortPlan(Transaction tx, Plan p, List<String> sortfields) {
+      this.tx = tx;
+      this.p = p;
+      sch = p.schema();
+      List<Pair> L = new ArrayList<>();
+      for (String s : sortfields) {
+    	  L.add(new Pair(s, true));
+      }
+      comp = new RecordComparator(new OrderData(L));
    }
    
    /**

@@ -2,6 +2,7 @@ package simpledb.parse;
 
 import java.util.*;
 
+import simpledb.materialize.AggregationFn;
 import simpledb.query.*;
 import simpledb.record.*;
 
@@ -18,8 +19,8 @@ public class Parser {
    
 // Methods for parsing predicates, terms, expressions, constants, and fields
    
-   public String field() {
-      return lex.eatId();
+   public AggPair field() {
+      return lex.eatFldname();
    }
    
    public Constant constant() {
@@ -31,7 +32,7 @@ public class Parser {
    
    public Expression expression() {
       if (lex.matchId())
-         return new Expression(field());
+         return new Expression(field().getFldname());
       else
          return new Expression(constant());
    }
@@ -56,11 +57,9 @@ public class Parser {
    
    public QueryData query() {
       lex.eatKeyword("select");
-      // System.out.println("Ate select");
       
-      List<String> fields = selectList();
+      List<AggPair> fields = selectList();
       lex.eatKeyword("from");
-      // System.out.println("Ate from");
       
       Collection<String> tables = tableList();
       Predicate pred = new Predicate();
@@ -68,21 +67,37 @@ public class Parser {
          lex.eatKeyword("where");
          pred = predicate();
       }
+      
+      List<String> groupList = new ArrayList<String>();
+      if (lex.matchKeyword("group")) {
+    	  groupList = group();
+      }
+      
       OrderData od;
       if (lex.matchKeyword("order")) {
     	  od = order();
       } else {
     	  List<Pair> L = new ArrayList<>();
-    	  for (String s : fields) {
-    		  L.add(new Pair(s, true));
+    	  for (AggPair agg : fields) {
+    		  L.add(new Pair(agg.getFldname(), true));
     	  }
     	  od = new OrderData(L);
       }
-      return new QueryData(fields, tables, pred, od);    	  
+      
+      List<String> fldNames = new ArrayList<>();
+      List<AggregationFn> aggs = new ArrayList<>();
+      for (AggPair agg: fields) {
+    	  fldNames.add(agg.getFldname());
+    	  if (agg.getAgg() != null) {
+    		  aggs.add(agg.getAgg());
+    	  }
+      }
+      
+      return new QueryData(fldNames, tables, pred, groupList, aggs, od);    	  
    }
    
-   private List<String> selectList() {
-      List<String> L = new ArrayList<String>();
+   private List<AggPair> selectList() {
+      List<AggPair> L = new ArrayList<>();
       L.add(field());
       if (lex.matchDelim(',')) {
          lex.eatDelim(',');
@@ -93,7 +108,7 @@ public class Parser {
    
    private List<Pair> orderList() {
 	      List<Pair> L = new ArrayList<>();
-	      String f = field();
+	      String f = field().getFldname();
 	      String k = "";
 	      if (lex.matchKeyword("asc")) {
 	    	  lex.eatKeyword("asc");
@@ -192,9 +207,16 @@ public class Parser {
       return new OrderData(fields);
    }
    
+   public List<String> group() {
+      lex.eatKeyword("group");
+      lex.eatKeyword("by");
+      List<String> fields = fieldList();
+      return fields;
+   }
+   
    private List<String> fieldList() {
       List<String> L = new ArrayList<String>();
-      L.add(field());
+      L.add(field().getFldname());
       if (lex.matchDelim(',')) {
          lex.eatDelim(',');
          L.addAll(fieldList());
@@ -218,7 +240,7 @@ public class Parser {
       lex.eatKeyword("update");
       String tblname = lex.eatId();
       lex.eatKeyword("set");
-      String fldname = field();
+      String fldname = field().getFldname();
       lex.eatDelim('=');
       Expression newval = expression();
       Predicate pred = new Predicate();
@@ -251,7 +273,7 @@ public class Parser {
    }
    
    private Schema fieldDef() {
-      String fldname = field();
+      String fldname = field().getFldname();
       return fieldType(fldname);
    }
    
@@ -283,29 +305,14 @@ public class Parser {
    
    
 //  Method for parsing create index commands
-   
    public CreateIndexData createIndex() {
-      lex.eatKeyword("index");
-      
-      
-      String indexKeyword = lex.eatIndexKeyword();
-      
-      
-      String idxname = lex.eatId();
-      
-      
-      lex.eatKeyword("on");
-      
-      
-      String tblname = lex.eatId();
-      
-      
-      lex.eatDelim('(');
-      
-      
-      String fldname = field();
-      
-      
+      lex.eatKeyword("index");       
+      String indexKeyword = lex.eatIndexKeyword();           
+      String idxname = lex.eatId();            
+      lex.eatKeyword("on");            
+      String tblname = lex.eatId();            
+      lex.eatDelim('(');            
+      String fldname = field().getFldname();      
       lex.eatDelim(')');
       
       
