@@ -67,15 +67,14 @@ public class HashJoinPlan implements Plan {
 			   Constant s1Val = s1.getVal(fldname1);
 			   int bucketIndex = s1Val.hashCode() % 100;
 			   TempTable bucket = lhsBuckets.get(bucketIndex);	
-			   System.out.println("inserting record into bucket" + bucketIndex);
+			   System.out.println("inserting record(" + fldname1 + ": " + s1Val + ") into bucket " + bucketIndex);
 			   if (bucket == null) {
 				   //create new bucket if no bucket yet
 				   bucket = new TempTable(tx, p1Schema);	     
 				   lhsBuckets.set(bucketIndex, bucket);
 				   sc = bucket.open();
 				   sc.insert();
-				   for (String fldname : p1Schema.fields()) {
-					   System.out.println("inserting " + s1.getVal(fldname) + " to " + fldname);
+				   for (String fldname : p1Schema.fields()) {					   
 					   sc.setVal(fldname, s1.getVal(fldname));
 				   }				   
 			   } else {
@@ -95,15 +94,14 @@ public class HashJoinPlan implements Plan {
 			   Constant s2Val = s2.getVal(fldname2);
 			   int bucketIndex = s2Val.hashCode() % 100;
 			   TempTable bucket = rhsBuckets.get(bucketIndex);	
-//			   System.out.println("inserting record into bucket" + bucketIndex);
+			   System.out.println("inserting record(" + fldname2 + ": " + s2Val + ") into bucket " + bucketIndex);
 			   if (bucket == null) {
 				   //create new bucket if no bucket yet
 				   bucket = new TempTable(tx, p2Schema);	     
 				   rhsBuckets.set(bucketIndex, bucket);
 				   sc = bucket.open();
 				   sc.insert();
-				   for (String fldname : p2Schema.fields()) {
-//					   System.out.println("inserting " + s1.getVal(fldname) + " to " + fldname);
+				   for (String fldname : p2Schema.fields()) {					   
 					   sc.setVal(fldname, s2.getVal(fldname));
 				   }				   
 			   } else {
