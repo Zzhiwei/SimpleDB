@@ -64,15 +64,10 @@ public class SortPlan implements Plan {
       while (runs.size() > 1)
          runs = doAMergeIteration(runs);
       
-      Scan sc = runs.get(0).open();
-      TempTable res = new TempTable(tx, sch);
-      UpdateScan dest = res.open();
+      TempTable merged = runs.get(0);
       if (distinct) {
-    	  removeDuplicates(sc, dest);
-    	  runs.set(0, res);
+    	  runs.set(0, removeDuplicates(merged));
       }
-      sc.close();
-      dest.close();
       return new SortScan(runs, comp);
    }
    
@@ -183,25 +178,41 @@ public class SortPlan implements Plan {
       return src.next();
    }
    
-   private void removeDuplicates(Scan src, UpdateScan dest) {
-	   src.beforeFirst();
-	   dest.beforeFirst();
-	   while (src.next()) {
+   private TempTable removeDuplicates(TempTable merged) {
+	   TempTable res = new TempTable(tx, sch);
+	   Scan sc1 = merged.open();
+	   Scan sc2 = merged.open();
+	   UpdateScan dest = res.open();
+	   
+	   sc1.beforeFirst();
+	   sc2.beforeFirst();
+	   sc2.next();
+	  
+	   while (sc2.next()) {
+		   sc1.next();
 		   boolean isDuplicate = true;
-		   for (String fldname : sch.fields()) {
-			   try {
-				   if (src.getVal(fldname) != dest.getVal(fldname)) {
-					   isDuplicate = false;    		  
-				   }   				   					   				   
-			   } catch (Exception e) {
-				   isDuplicate = false;
-			   }
+		   for (String fldname : sch.fields()) {			
+			   Constant sc1Value = sc1.getVal(fldname);
+			   Constant sc2Value = sc2.getVal(fldname);
+			   int comparison = sc1Value.compareTo(sc2Value);
+			   if (comparison != 0) {
+				   isDuplicate = false;    		  
+			   }   				   					   				   			   
 		   }
 		   if (!isDuplicate) {
 			   dest.insert();       
 			   for (String fldname : sch.fields())
-				   dest.setVal(fldname, src.getVal(fldname));
+				   dest.setVal(fldname, sc1.getVal(fldname));
 		   }
 	   }
+	   
+	   dest.insert();       
+	   for (String fldname : sch.fields())
+		   dest.setVal(fldname, sc1.getVal(fldname));
+	   
+	   sc1.close();
+	   sc2.close();
+	   dest.close();
+	   return res;
    }
 }
