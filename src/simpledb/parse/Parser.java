@@ -56,7 +56,14 @@ public class Parser {
 // Methods for parsing queries
    
    public QueryData query() {
+	   
+	  boolean distinct = false;
+	   
       lex.eatKeyword("select");
+      if (lex.matchKeyword("distinct")) {
+    	  lex.eatKeyword("distinct");
+    	  distinct = true;
+      }
       
       List<String> fields = selectList();
       lex.eatKeyword("from");
@@ -84,7 +91,7 @@ public class Parser {
     	  od = new OrderData(L);
       }
       
-      return new QueryData(fields, tables, pred, groupList, od);    	  
+      return new QueryData(fields, tables, pred, groupList, od, distinct);    	  
    }
    
    private List<String> selectList() {

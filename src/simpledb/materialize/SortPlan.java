@@ -17,6 +17,7 @@ public class SortPlan implements Plan {
    private Plan p;
    private Schema sch;
    private RecordComparator comp;
+   private boolean distinct = false;
    
    /**
     * Create a sort plan for the specified query.
@@ -30,6 +31,14 @@ public class SortPlan implements Plan {
       sch = p.schema();
       comp = new RecordComparator(sortfields);
    }
+   
+   public SortPlan(Transaction tx, Plan p, OrderData sortfields, boolean distinct) {
+	      this.tx = tx;
+	      this.p = p;
+	      sch = p.schema();
+	      comp = new RecordComparator(sortfields);
+	      this.distinct = distinct;
+	   }
    
    public SortPlan(Transaction tx, Plan p, List<String> sortfields) {
       this.tx = tx;
@@ -54,6 +63,16 @@ public class SortPlan implements Plan {
       src.close();
       while (runs.size() > 1)
          runs = doAMergeIteration(runs);
+      
+      Scan sc = runs.get(0).open();
+      TempTable res = new TempTable(tx, sch);
+      UpdateScan dest = res.open();
+      if (distinct) {
+    	  removeDuplicates(sc, dest);
+    	  runs.set(0, res);
+      }
+      sc.close();
+      dest.close();
       return new SortScan(runs, comp);
    }
    
@@ -162,5 +181,27 @@ public class SortPlan implements Plan {
       for (String fldname : sch.fields())
          dest.setVal(fldname, src.getVal(fldname));
       return src.next();
+   }
+   
+   private void removeDuplicates(Scan src, UpdateScan dest) {
+	   src.beforeFirst();
+	   dest.beforeFirst();
+	   while (src.next()) {
+		   boolean isDuplicate = true;
+		   for (String fldname : sch.fields()) {
+			   try {
+				   if (src.getVal(fldname) != dest.getVal(fldname)) {
+					   isDuplicate = false;    		  
+				   }   				   					   				   
+			   } catch (Exception e) {
+				   isDuplicate = false;
+			   }
+		   }
+		   if (!isDuplicate) {
+			   dest.insert();       
+			   for (String fldname : sch.fields())
+				   dest.setVal(fldname, src.getVal(fldname));
+		   }
+	   }
    }
 }

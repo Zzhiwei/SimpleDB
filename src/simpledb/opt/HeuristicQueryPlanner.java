@@ -66,7 +66,7 @@ public class HeuristicQueryPlanner implements QueryPlanner {
     	  p = new ProjectPlan(p, data.fields());   
       }
       
-      return new SortPlan(tx, p, data.getOd());
+      return new SortPlan(tx, p, data.getOd(), true);
    }
    
    private Plan getLowestSelectPlan() {
