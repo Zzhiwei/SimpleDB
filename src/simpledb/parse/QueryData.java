@@ -21,13 +21,15 @@ public class QueryData {
    private List<String> groupList;
    private List<AggregationFn> aggs = new ArrayList<>();
    private OrderData od;
+   private boolean distinct;
    
-   public QueryData(List<String> fields, Collection<String> tables, Predicate pred, List<String> groupList, OrderData od) {
+   public QueryData(List<String> fields, Collection<String> tables, Predicate pred, List<String> groupList, OrderData od, boolean distinct) {
       this.fields = fields;
       this.tables = tables;
       this.pred = pred;
       this.groupList= groupList;
       this.od = od;
+      this.distinct = distinct;
    }
    
    /**
@@ -70,6 +72,10 @@ public class QueryData {
    
    public OrderData getOd() {
 	   return od;
+   }
+   
+   public boolean getDistinct() {
+	   return distinct;
    }
    
    
