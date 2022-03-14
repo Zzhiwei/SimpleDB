@@ -36,8 +36,14 @@ public class SimpleIJ {
          Plan p = planner.createQueryPlan(cmd, tx);
          Scan s = p.open();
     	 
+         int distinctIndex = cmd.indexOf("distinct");
          int endIndex = cmd.indexOf("from");
-         String cols = cmd.substring(7, endIndex);
+         String cols;
+         if (distinctIndex == -1) {
+        	 cols = cmd.substring(7, endIndex);        	 
+         } else {
+        	 cols = cmd.substring(distinctIndex + 8, endIndex);
+         }
          String[] headers = cols.split(",");
          int numcols = headers.length;
          int totalwidth = 0;
