@@ -19,8 +19,8 @@ public class Parser {
    
 // Methods for parsing predicates, terms, expressions, constants, and fields
    
-   public AggPair field() {
-      return lex.eatFldname();
+   public String field() {
+      return lex.eatId();
    }
    
    public Constant constant() {
@@ -32,7 +32,7 @@ public class Parser {
    
    public Expression expression() {
       if (lex.matchId())
-         return new Expression(field().getFldname());
+         return new Expression(field());
       else
          return new Expression(constant());
    }
@@ -58,7 +58,7 @@ public class Parser {
    public QueryData query() {
       lex.eatKeyword("select");
       
-      List<AggPair> fields = selectList();
+      List<String> fields = selectList();
       lex.eatKeyword("from");
       
       Collection<String> tables = tableList();
@@ -78,26 +78,17 @@ public class Parser {
     	  od = order();
       } else {
     	  List<Pair> L = new ArrayList<>();
-    	  for (AggPair agg : fields) {
-    		  L.add(new Pair(agg.getFldname(), true));
+    	  for (String f : fields) {
+    		  L.add(new Pair(f, true));
     	  }
     	  od = new OrderData(L);
       }
       
-      List<String> fldNames = new ArrayList<>();
-      List<AggregationFn> aggs = new ArrayList<>();
-      for (AggPair agg: fields) {
-    	  fldNames.add(agg.getFldname());
-    	  if (agg.getAgg() != null) {
-    		  aggs.add(agg.getAgg());
-    	  }
-      }
-      
-      return new QueryData(fldNames, tables, pred, groupList, aggs, od);    	  
+      return new QueryData(fields, tables, pred, groupList, od);    	  
    }
    
-   private List<AggPair> selectList() {
-      List<AggPair> L = new ArrayList<>();
+   private List<String> selectList() {
+      List<String> L = new ArrayList<>();
       L.add(field());
       if (lex.matchDelim(',')) {
          lex.eatDelim(',');
@@ -108,7 +99,7 @@ public class Parser {
    
    private List<Pair> orderList() {
 	      List<Pair> L = new ArrayList<>();
-	      String f = field().getFldname();
+	      String f = field();
 	      String k = "";
 	      if (lex.matchKeyword("asc")) {
 	    	  lex.eatKeyword("asc");
@@ -216,7 +207,7 @@ public class Parser {
    
    private List<String> fieldList() {
       List<String> L = new ArrayList<String>();
-      L.add(field().getFldname());
+      L.add(field());
       if (lex.matchDelim(',')) {
          lex.eatDelim(',');
          L.addAll(fieldList());
@@ -240,7 +231,7 @@ public class Parser {
       lex.eatKeyword("update");
       String tblname = lex.eatId();
       lex.eatKeyword("set");
-      String fldname = field().getFldname();
+      String fldname = field();
       lex.eatDelim('=');
       Expression newval = expression();
       Predicate pred = new Predicate();
@@ -273,7 +264,7 @@ public class Parser {
    }
    
    private Schema fieldDef() {
-      String fldname = field().getFldname();
+      String fldname = field();
       return fieldType(fldname);
    }
    
@@ -312,7 +303,7 @@ public class Parser {
       lex.eatKeyword("on");            
       String tblname = lex.eatId();            
       lex.eatDelim('(');            
-      String fldname = field().getFldname();      
+      String fldname = field();      
       lex.eatDelim(')');
       
       

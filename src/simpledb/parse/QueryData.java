@@ -3,6 +3,11 @@ package simpledb.parse;
 import java.util.*;
 
 import simpledb.materialize.AggregationFn;
+import simpledb.materialize.AvgFn;
+import simpledb.materialize.CountFn;
+import simpledb.materialize.MaxFn;
+import simpledb.materialize.MinFn;
+import simpledb.materialize.SumFn;
 import simpledb.query.*;
 
 /**
@@ -14,15 +19,14 @@ public class QueryData {
    private Collection<String> tables;
    private Predicate pred;
    private List<String> groupList;
-   private List<AggregationFn> aggs;
+   private List<AggregationFn> aggs = new ArrayList<>();
    private OrderData od;
    
-   public QueryData(List<String> fields, Collection<String> tables, Predicate pred, List<String> groupList, List<AggregationFn> aggs, OrderData od) {
+   public QueryData(List<String> fields, Collection<String> tables, Predicate pred, List<String> groupList, OrderData od) {
       this.fields = fields;
       this.tables = tables;
       this.pred = pred;
       this.groupList= groupList;
-      this.aggs = aggs;
       this.od = od;
    }
    
@@ -47,12 +51,27 @@ public class QueryData {
    }
    
    public List<AggregationFn> getAggs() {
-	   return aggs;
+	  List<AggregationFn> aggLst = new ArrayList<>();
+	  for (String s : fields) {
+		  if (s.startsWith("sumof")) {
+	    	  aggLst.add(new SumFn(s.substring(5)));
+	      } else if (s.startsWith("maxof")) {
+	    	  aggLst.add(new MaxFn(s.substring(5)));
+	      } else if (s.startsWith("minof")) {
+	    	  aggLst.add(new MinFn(s.substring(5)));
+	      } else if (s.startsWith("avgof")) {
+	    	  aggLst.add(new AvgFn(s.substring(5)));
+	      } else if (s.startsWith("countof")) {
+	    	  aggLst.add(new CountFn(s.substring(7)));
+	      }
+	  }
+	  return aggLst;
    }
    
    public OrderData getOd() {
 	   return od;
    }
+   
    
    /**
     * Returns the predicate that describes which
