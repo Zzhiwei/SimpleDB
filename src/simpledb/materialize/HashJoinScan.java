@@ -10,6 +10,8 @@ import java.util.HashSet;
 
 import simpledb.query.Constant;
 import simpledb.query.Scan;
+import simpledb.query.UpdateScan;
+import simpledb.record.RID;
 
 
 public class HashJoinScan implements Scan {
@@ -18,13 +20,9 @@ public class HashJoinScan implements Scan {
 	List<TempTable> lhsBuckets;
 	List<TempTable> rhsBuckets;
 	int index = 0;	
-	HashSet<Constant> set = new HashSet<>();
 	Scan rhsScan;
-	Scan lhsScan;
-	
-	
-	
-	
+	UpdateScan lhsScan;
+	HashMap<Constant, RID> RidMap = new HashMap<>();
 
 	HashJoinScan(String fldname1, String fldname2,
 			List<TempTable> hashtable1,
@@ -36,51 +34,59 @@ public class HashJoinScan implements Scan {
 	}
 	
 	public void beforeFirst() {
-//	      lhs.beforeFirst();
-//	      rhs.beforeFirst();
-//	      lhs.next();
-	   }
+		index = 0;
+	}
+	
+	private void cleanup() {
+		index++;
+		if (rhsScan != null) {
+			rhsScan.close();
+		}
+		if (lhsScan != null) {			
+			lhsScan.close();
+		}
+		rhsScan = null;				
+		lhsScan = null;
+		RidMap.clear();
+	}
 	
 	
 	public boolean next() {
-		//<Constant, record>
 		while (index < 100) {										
-			if (set.isEmpty()) { //build hashtable only if set is empty
+			if (RidMap.isEmpty()) {
 				TempTable temp = lhsBuckets.get(index);
 				if (temp == null) {
-					index++;					
+					cleanup();					
 					continue;
 				}
-				Scan sc = temp.open();				
+				UpdateScan sc = temp.open();		
+				lhsScan = sc;
 				while (sc.next()) {
-					set.add(sc.getVal(fldname1));					
-				}
-				sc.close();
+					RidMap.put(sc.getVal(fldname1), sc.getRid());
+				}				
 			}
 			
 			
 			if (rhsScan == null) {
 				TempTable temp = rhsBuckets.get(index);
 				if (temp == null) {
-					index++;
-					set.clear();
+					cleanup();
 					continue;
 				}
 				this.rhsScan = temp.open();
 			}
 			
 			
-			while (rhsScan.next()) { //move the pointer forward 
-				//check whether hashset contains that value
+			while (rhsScan.next()) { 
 				Constant c = rhsScan.getVal(fldname2);
-				if (set.contains(c)) {					
+				RID rid = RidMap.get(c);
+				if (rid != null) {
+					lhsScan.moveToRid(rid);
 					return true;
 				} 
 			}
 			
-			index++;
-			set.clear();
-			rhsScan = null;
+			cleanup();
 		}
 		
 		return false;
@@ -95,7 +101,7 @@ public class HashJoinScan implements Scan {
 	      if (rhsScan.hasField(fldname))
 	         return rhsScan.getInt(fldname);
 	      else  
-	         return rhsScan.getInt(fldname);
+	         return lhsScan.getInt(fldname);
 	   }
 	   
 	   /**
@@ -106,7 +112,7 @@ public class HashJoinScan implements Scan {
 	      if (rhsScan.hasField(fldname))
 	         return rhsScan.getVal(fldname);
 	      else
-	         return rhsScan.getVal(fldname);
+	         return lhsScan.getVal(fldname);
 	   }
 	   
 	   /**
@@ -117,14 +123,14 @@ public class HashJoinScan implements Scan {
 	      if (rhsScan.hasField(fldname))
 	         return rhsScan.getString(fldname);
 	      else
-	         return rhsScan.getString(fldname);
+	         return lhsScan.getString(fldname);
 	   }
 	   
 	   /** Returns true if the field is in the schema.
 	     * @see simpledb.query.Scan#hasField(java.lang.String)
 	     */
 	   public boolean hasField(String fldname) {
-	      return rhsScan.hasField(fldname) || rhsScan.hasField(fldname);
+	      return rhsScan.hasField(fldname) || lhsScan.hasField(fldname);
 	   }
 	   
 	   /**
@@ -132,13 +138,14 @@ public class HashJoinScan implements Scan {
 	    * @see simpledb.query.Scan#close()
 	    */
 	   public void close() {
-		   rhsScan.close();
-		   rhsScan.close();
-	   }
-
-	
-	
-
+		   if (rhsScan != null) {
+			   rhsScan.close();   
+		   }
+		   if (rhsScan != null) {
+			   lhsScan.close();   
+		   }
+		   
+	   }		
 }
 
 

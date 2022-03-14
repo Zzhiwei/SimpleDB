@@ -19,8 +19,20 @@ public class HashJoinTest {
 		Plan hashJoinPlan = new HashJoinPlan(tx, studentplan, enrollplan, "sid", "studentid");
 		Scan s = hashJoinPlan.open();
 				
-		while (s.next()) {
+		System.out.println("printing result");
+		while (s.next()) {			
 			System.out.println(s.getVal("sname"));
+		}
+		s.close();
+		
+		Plan courseplan = new TablePlan(tx, "course", mdm);
+		Plan sectionplan = new TablePlan(tx, "section", mdm);
+		hashJoinPlan = new HashJoinPlan(tx, courseplan, sectionplan, "cid", "courseid");
+		s = hashJoinPlan.open();
+			
+		System.out.println("printing join result:");
+		while (s.next()) {			
+			System.out.println(s.getVal("cid"));
 		}
 		s.close();
 		
