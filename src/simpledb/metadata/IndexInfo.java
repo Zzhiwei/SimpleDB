@@ -41,6 +41,7 @@ public class IndexInfo {
     * @param tx the calling transaction
     * @param tblSchema the schema of the table
     * @param si the statistics for the table
+    * @param indexKeyword the structure of the index
     */
    public IndexInfo(String idxname, String fldname, Schema tblSchema,
                     Transaction tx,  StatInfo si, String indexKeyword) {

@@ -292,7 +292,6 @@ public class Parser {
    }
    
 // Method for parsing create view commands
-   
    public CreateViewData createView() {
       lex.eatKeyword("view");
       String viewname = lex.eatId();
@@ -312,7 +311,6 @@ public class Parser {
       lex.eatDelim('(');            
       String fldname = field();      
       lex.eatDelim(')');
-      
       
       return new CreateIndexData(idxname, tblname, fldname, indexKeyword);
    }

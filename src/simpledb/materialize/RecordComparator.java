@@ -16,7 +16,7 @@ public class RecordComparator implements Comparator<Scan> {
    /**
     * Create a comparator using the specified fields,
     * using the ordering implied by its iterator.
-    * @param fields a list of field names
+    * @param fields an OrderData object, containing (field name, sort order) pairs
     */
    public RecordComparator(OrderData records) {
       this.records = records;
