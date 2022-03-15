@@ -13,9 +13,9 @@ public class HashJoinTest {
 		MetadataMgr mdm = db.mdMgr();
 		Transaction tx = db.newTx();
 		
+		//TEST 1: student sid join enroll studentid
 		Plan studentplan = new TablePlan(tx, "student", mdm);
-		Plan enrollplan = new TablePlan(tx, "enroll", mdm);
-		
+		Plan enrollplan = new TablePlan(tx, "enroll", mdm);		
 		Plan hashJoinPlan = new HashJoinPlan(tx, studentplan, enrollplan, "sid", "studentid");
 		Scan s = hashJoinPlan.open();
 				
@@ -25,6 +25,7 @@ public class HashJoinTest {
 		}
 		s.close();
 		
+		//TEST 2: course cid join section courseid
 		Plan courseplan = new TablePlan(tx, "course", mdm);
 		Plan sectionplan = new TablePlan(tx, "section", mdm);
 		hashJoinPlan = new HashJoinPlan(tx, courseplan, sectionplan, "cid", "courseid");

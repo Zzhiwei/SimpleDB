@@ -27,10 +27,10 @@ public class Lexer {
       tok = new StreamTokenizer(new StringReader(s));
       tok.ordinaryChar('.');   //disallow "." in identifiers
       tok.wordChars('_', '_'); //allow "_" in identifiers
-      tok.wordChars('<', '<'); //allow "_" in identifiers
-      tok.wordChars('=', '='); //allow "_" in identifiers
-      tok.wordChars('>', '>'); //allow "_" in identifiers
-      tok.lowerCaseMode(true); //ids and keywords are converted
+      tok.wordChars('<', '<'); //allow "<" in identifiers
+      tok.wordChars('=', '='); //allow "=" in identifiers
+      tok.wordChars('>', '>'); //allow ">" in identifiers
+      tok.lowerCaseMode(true); //id and keywords are converted
       nextToken();
    }
    
@@ -71,6 +71,10 @@ public class Lexer {
       return tok.ttype == StreamTokenizer.TT_WORD && tok.sval.equals(w);
    }
    
+   /**
+    * Returns true if current token is an index keyword.
+    * @return true if current token is an index keyword
+    */
    public boolean matchIndexKeyword() {
 	   return tok.ttype == StreamTokenizer.TT_WORD && indexKeywords.contains(tok.sval);
    }
@@ -145,6 +149,12 @@ public class Lexer {
       nextToken();
    }
    
+   /**
+    * Throws an exception if the current token is not an
+    * index keyword. 
+    * Otherwise, moves to the next token.
+    * @return the string value of the current index keyword
+    */
    public String eatIndexKeyword() {
 	   if (!matchIndexKeyword()) {
 		   throw new BadSyntaxException();
@@ -154,6 +164,12 @@ public class Lexer {
 	   return s;
    }
    
+   /**
+    * Throws an exception if the current token is not a
+    * valid identifier. 
+    * Otherwise, moves to the next token.
+    * @return the string value of the current identifier
+    */
    public String eatId() {
       if (!matchId())
          throw new BadSyntaxException();
@@ -167,7 +183,7 @@ public class Lexer {
     * Throws an exception if the current token is not
     * an operator.
     * Otherwise, moves to the next token.
-    * @return the string value of the current token
+    * @return the string value of the current operator
     */
    public Operator eatOperator() {
 	   if (!matchOperator())

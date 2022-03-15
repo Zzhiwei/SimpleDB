@@ -5,8 +5,15 @@ import java.util.Collection;
 
 import simpledb.parse.BadSyntaxException;
 
+/**
+ * Represents the operator used in SQL queries.
+ */
 public class Operator {
+	/**
+	 * Allowed operators.
+	 */
 	public static final Collection<String> operators = Arrays.asList("=", "<>", "!=", ">", ">=", "<", "<=");
+	
 	enum operatorType {
 		EQUAL,
 		NOT_EQUAL,
@@ -18,7 +25,10 @@ public class Operator {
 	
 	private final operatorType ownType;
 	
-	
+	/**
+	 * Creates an operator object given a string representing one of the allowed operators.
+	 * @param s String of the operator. 
+	 */
 	public Operator(String s) {
 		switch (s) {
 		case "=":
@@ -46,6 +56,12 @@ public class Operator {
 		 
 	}
 	
+	/**
+	 * Operates on the LHS and RHS constant given the type of this operator.
+	 * @param lhsval LHS constant
+	 * @param rhsVal RHS constant
+	 * @return result of the operation.
+	 */
 	public boolean operate(Constant lhsval, Constant rhsVal) {
 		switch (ownType) {
 		case EQUAL:
