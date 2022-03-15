@@ -11,7 +11,7 @@ public class MinFn implements AggregationFn {
    private Constant val;
    
    /**
-    * Create a max aggregation function for the specified field.
+    * Create a min aggregation function for the specified field.
     * @param fldname the name of the aggregated field
     */
    public MinFn(String fldname) {
@@ -19,7 +19,7 @@ public class MinFn implements AggregationFn {
    }
    
    /**
-    * Start a new maximum to be the 
+    * Start a new minimum to be the 
     * field value in the current record.
     * @see simpledb.materialize.AggregationFn#processFirst(simpledb.query.Scan)
     */
@@ -28,8 +28,8 @@ public class MinFn implements AggregationFn {
    }
    
    /**
-    * Replace the current maximum by the field value
-    * in the current record, if it is higher.
+    * Replace the current minimum by the field value
+    * in the current record, if it is lower.
     * @see simpledb.materialize.AggregationFn#processNext(simpledb.query.Scan)
     */
    public void processNext(Scan s) {
@@ -39,7 +39,7 @@ public class MinFn implements AggregationFn {
    }
    
    /**
-    * Return the field's name, prepended by "maxof".
+    * Return the field's name, prepended by "minof".
     * @see simpledb.materialize.AggregationFn#fieldName()
     */
    public String fieldName() {
@@ -47,7 +47,7 @@ public class MinFn implements AggregationFn {
    }
    
    /**
-    * Return the current maximum.
+    * Return the current minimum.
     * @see simpledb.materialize.AggregationFn#value()
     */
    public Constant value() {

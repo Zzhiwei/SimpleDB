@@ -55,8 +55,6 @@ public class HeuristicQueryPlanner implements QueryPlanner {
             currentplan = getLowestProductPlan(currentplan);
       }
       
-      System.out.println(currentplan.toString());
-      
       // Step 4.Group by if needed
       Plan p;
       if (data.getGroupList().isEmpty() && data.getAggs().isEmpty()) {

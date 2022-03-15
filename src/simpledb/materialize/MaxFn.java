@@ -1,4 +1,4 @@
-package simpledb.materialize;
+	package simpledb.materialize;
 
 import simpledb.query.*;
 
